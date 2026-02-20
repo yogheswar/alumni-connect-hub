@@ -2,6 +2,119 @@ import MentorshipChat from '../models/MentorshipChat.js';
 import MentorshipRequest from '../models/MentorshipRequest.js';
 import Connection from '../models/Connection.js';
 
+const AI_API_BASE = 'http://localhost:8000';
+
+// =============================================================================
+//  AI DOMAIN ROADMAP + QUIZ
+// =============================================================================
+
+/**
+ * POST /api/mentorship/chat/:mentorshipId/domain-roadmap
+ * Generates a domain-specific roadmap + quiz via Python AI.
+ * Called when student accepts the mentorship connection.
+ */
+export const generateDomainRoadmap = async (req, res) => {
+    try {
+        const { mentorshipId } = req.params;
+        const userId = req.user._id;
+
+        // ── 1. Try MentorshipRequest first ───────────────────────────────────
+        let mentorship = await MentorshipRequest.findById(mentorshipId)
+            .populate('student', 'name interests skills')
+            .populate('alumni', 'name expertise currentPosition')
+            .lean();
+
+        let domain = 'Software Engineering';
+        let studentName = 'Student';
+        let mentorName = 'Mentor';
+        let isAuthorized = false;
+
+        if (mentorship) {
+            // Authorisation check — must be the student or alumni in this request
+            const isStudent = mentorship.student?._id?.toString() === userId.toString();
+            const isAlumni = mentorship.alumni?._id?.toString() === userId.toString();
+            if (!isStudent && !isAlumni) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
+
+            domain = mentorship.domain || 'Software Engineering';
+            studentName = mentorship.student?.name || 'Student';
+            mentorName = mentorship.alumni?.name || 'Mentor';
+            isAuthorized = true;
+        } else {
+            // ── 2. Fall back to Connection model ─────────────────────────────
+            const connection = await Connection.findById(mentorshipId)
+                .populate('student', 'name interests skills projectDomains')
+                .populate('alumni', 'name expertise currentPosition skills')
+                .lean();
+
+            if (!connection) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Mentorship or connection not found'
+                });
+            }
+
+            // Authorisation check
+            const isStudent = connection.student?._id?.toString() === userId.toString();
+            const isAlumni = connection.alumni?._id?.toString() === userId.toString();
+            if (!isStudent && !isAlumni) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
+
+            // Derive domain from connection data
+            domain = req.body?.domain ||
+                connection.studentInterests?.[0] ||
+                connection.student?.interests?.[0] ||
+                connection.student?.projectDomains?.[0] ||
+                connection.alumni?.expertise?.[0] ||
+                connection.alumni?.currentPosition ||
+                'Software Engineering';
+
+            studentName = connection.student?.name || 'Student';
+            mentorName = connection.alumni?.name || 'Mentor';
+            isAuthorized = true;
+        }
+
+        console.log(`[generateDomainRoadmap] mentorshipId=${mentorshipId} domain="${domain}" student="${studentName}" mentor="${mentorName}"`);
+
+        // ── 3. Call Python AI ─────────────────────────────────────────────────
+        const aiRes = await fetch(`${AI_API_BASE}/generate-domain-roadmap/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                domain,
+                student_name: studentName,
+                mentor_name: mentorName,
+                session_id: mentorshipId,
+            }),
+            signal: AbortSignal.timeout(120000),
+        });
+
+        if (!aiRes.ok) {
+            const err = await aiRes.text();
+            console.error('[generateDomainRoadmap] AI error:', err);
+            return res.status(500).json({ success: false, message: 'AI service error', detail: err });
+        }
+
+        const data = await aiRes.json();
+
+        return res.json({
+            success: true,
+            domain,
+            roadmap: data.roadmap,
+            quiz_questions: data.quiz_questions,
+            message: data.message,
+        });
+
+    } catch (error) {
+        console.error('[generateDomainRoadmap] error:', error);
+        res.status(500).json({ success: false, message: 'Server error generating roadmap' });
+    }
+};
+
+
+
 // @desc    Get chat messages for a mentorship or connection
 // @route   GET /api/mentorship/chat/:mentorshipId
 // @access  Private

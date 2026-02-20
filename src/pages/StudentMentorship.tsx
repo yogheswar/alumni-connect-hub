@@ -264,15 +264,21 @@ const StudentMentorship = () => {
 
                                         {/* Actions */}
                                         <Link to={`/mentorship-chat/${mentorship._id}`}>
-                                            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors">
+                                            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors mb-2">
                                                 <MessageCircle size={16} />
                                                 Message Mentor
+                                            </button>
+                                        </Link>
+                                        <Link to={`/mentorship-chat/${mentorship._id}`} state={{ openTab: 'roadmap' }}>
+                                            <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary/20 to-purple-500/20 border border-primary/20 text-primary rounded-xl text-sm font-bold hover:from-primary/30 hover:to-purple-500/30 transition-all">
+                                                🗺️ View AI Roadmap & Quiz
                                             </button>
                                         </Link>
 
                                         <p className="text-xs text-muted-foreground text-center mt-3">
                                             Connected {new Date(mentorship.createdAt).toLocaleDateString()}
                                         </p>
+
                                     </div>
                                 </GlassCard>
                             ))}

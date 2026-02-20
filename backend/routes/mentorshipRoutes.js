@@ -11,7 +11,8 @@ import {
     getChatMessages,
     sendChatMessage,
     getUnreadCount,
-    getUserChats
+    getUserChats,
+    generateDomainRoadmap
 } from '../controllers/mentorshipChatController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -29,7 +30,7 @@ router.get('/students/:id', getStudentById);
 // Get incoming mentorship requests (student-initiated)
 router.get('/requests/incoming', getIncomingMentorshipRequests);
 
-// Get my mentorship requests (as alumni)
+// Get my mentorship requests (as alumni or student)
 router.get('/requests', getMyMentorshipRequests);
 
 // Create mentorship request
@@ -44,4 +45,8 @@ router.get('/chat/unread/count', getUnreadCount);
 router.get('/chat/:mentorshipId', getChatMessages);
 router.post('/chat/:mentorshipId', sendChatMessage);
 
+// AI Domain Roadmap + Quiz  →  POST /api/mentorship/chat/:mentorshipId/domain-roadmap
+router.post('/chat/:mentorshipId/domain-roadmap', generateDomainRoadmap);
+
 export default router;
+

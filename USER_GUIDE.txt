@@ -1,0 +1,113 @@
+ALUMNI CONNECT HUB - NEW USER SETUP GUIDE
+=======================================
+
+Follow these steps to set up and run the Alumni Connect Hub on a new laptop.
+
+1. PREREQUISITES
+----------------
+Before you begin, ensure you have the following installed:
+   - Node.js (v18 or higher): https://nodejs.org/
+   - MongoDB (Community Server): https://www.mongodb.com/try/download/community
+     (Alternatively, you can use a MongoDB Atlas cloud database URI)
+   - Git: https://git-scm.com/downloads
+   - VS Code (Recommended Code Editor)
+
+2. CLONE THE REPOSITORY
+-----------------------
+1. Open a terminal (Command Prompt or PowerShell).
+2. Navigate to the folder where you want to keep the project.
+3. Run the command:
+   git clone https://github.com/Vaishnav-188/INFRA-INNOVATORS.git alumni-connect-hub
+4. Go into the project folder:
+   cd alumni-connect-hub
+
+3. WINDOWS POWERSHELL EXECUTION POLICY (If required)
+----------------------------------------------------
+If you run into "script cannot be loaded" errors, run PowerShell as Administrator and execute:
+   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+4. INSTALL DEPENDENCIES
+-----------------------
+You need to install libraries for both the Frontend and the Backend.
+
+A. Backend Setup:
+   1. Open a terminal in the main `alumni-connect-hub` folder.
+   2. Navigate to the backend:
+      cd backend
+   3. Install dependencies:
+      npm install
+
+B. Frontend Setup:
+   1. Open a new terminal instance (keep the backend one open) or go back to the root:
+      cd ..
+   2. Install dependencies:
+      npm install
+
+5. ENVIRONMENT CONFIGURATION
+----------------------------
+You need to configure the database connection and security keys.
+
+1. Go to the `backend` folder.
+2. Create a new file named `.env`.
+3. Open `.env` in Notepad or VS Code and paste the following:
+
+   NODE_ENV=development
+   PORT=5000
+   MONGODB_URI=mongodb://localhost:27017/alumni_db
+   JWT_SECRET=your_super_secret_key_change_this
+   JWT_EXPIRE=30d
+
+   *(Note: If you are using MongoDB Atlas, replace the MONGODB_URI with your cloud connection string)*
+
+6. DATABASE SETUP & INITIAL ADMIN
+---------------------------------
+To log in as an Admin, you need to create the first account manually.
+
+1. Open the terminal inside the `backend` folder.
+2. Run the setup script:
+   node create-admin.js
+
+   This will create a default admin account:
+   - Email: admin@college.edu
+   - Password: admin123(or whatever the script outputs)
+
+7. RUNNING THE APPLICATION
+--------------------------
+You need to run two servers simultaneously.
+
+Terminal 1 (Backend):
+   cd backend
+   npm run dev
+   > You should see: "MongoDB Connected"
+
+Terminal 2 (Frontend):
+   (Make sure you are in the main folder)
+   npm run dev
+   > You should see: "Local: http://localhost:8080/"
+
+8. USING THE PRODUCT
+--------------------
+
+A. Admin Login:
+   1. Open your browser and go to: http://localhost:8080/admin
+   2. Login with the admin credentials created in Step 6.
+   3. You will see the Admin Dashboard.
+
+B. Importing Data (Important First Step):
+   1. In the Admin Dashboard, click the "CSV" tab.
+   2. Click "Select Student CSV" and upload `backend/sample-csv/students_clean.csv`.
+   3. Click "Select Alumni CSV" and upload `backend/sample-csv/alumni_clean.csv`.
+   4. LIMITATION NOTE: Accounts created via CSV have temporary passwords.
+   5. You can download a "Credentials Report" after upload to see these accounts.
+
+C. Student/Alumni User Flow:
+   1. Users go to http://localhost:8080
+   2. Student Registration: Must use `@kgkite.ac.in` email.
+   3. Alumni Registration: Must use `@kgkite.alumni.ac.in` email.
+   4. New registrations require Admin Approval (check "Verifications" tab in Admin Dashboard).
+
+9. TROUBLESHOOTING
+------------------
+- White Screen? Check the browser console (F12) for errors.
+- "Connection Refused"? Ensure the Backend terminal is running and shows "MongoDB Connected".
+- MongoDB Error? Open "Services" in Windows and ensure "MongoDB Server" is Running.
